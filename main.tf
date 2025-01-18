@@ -21,7 +21,7 @@ resource "azurerm_subnet" "developer-subnet" {
   name                 = "${var.resource_group_config.prefix}-subnet"
   resource_group_name  = azurerm_resource_group.developer-rg.name
   virtual_network_name = azurerm_virtual_network.developer-vnet.name
-  address_prefixes     = [for each in var.vnet_address_space: cidrsubnet(each, 8, 2)]
+  address_prefixes     = [for each in var.vnet_address_space : cidrsubnet(each, 8, 2)]
 }
 ### Network - End ###
 
@@ -34,7 +34,9 @@ resource "azurerm_network_security_group" "developer-sg" {
   tags = var.resource_group_config.tags
 }
 
-resource "azurerm_network_security_rule" "tf-practice-developer-rule" {
+resource "azurerm_network_security_rule" "developer-rule" {
+  count = length(var.vm_config.source_address_prefixes) > 0 ? 1 : 0
+
   name                        = "${var.resource_group_config.prefix}-developer-rule"
   priority                    = 100
   direction                   = "Inbound"
@@ -42,7 +44,7 @@ resource "azurerm_network_security_rule" "tf-practice-developer-rule" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefixes     = length(var.vm_config.accessing_ips) > 0 ? var.vm_config.accessing_ips : ["*"] 
+  source_address_prefixes     = var.vm_config.source_address_prefixes
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.developer-rg.name
   network_security_group_name = azurerm_network_security_group.developer-sg.name
@@ -90,10 +92,10 @@ data "cloudinit_config" "vm-init" {
   base64_encode = true
 
   part {
-    filename     = "init.sh"
+    filename     = "docker-install.sh"
     content_type = "text/x-shellscript"
 
-    content = file("scripts/provision-basic.sh")
+    content = file("scripts/docker-install.sh")
   }
 
   part {

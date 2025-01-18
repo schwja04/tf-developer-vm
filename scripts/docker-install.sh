@@ -6,7 +6,6 @@ set -e
 # Run in non-interactive mode
 export DEBIAN_FRONTEND=noninteractive
 
-echo $(whoami) > /home/serveradmin/whoami.txt
 #### DOCKER INSTALL ####
 # Add Docker's official GPG key:
 apt update -y
