@@ -2,4 +2,6 @@
 package_update: true
 package_upgrade: true
 runcmd:
-  - ["sh", "/var/lib/cloud/instance/scripts/docker-install.sh"]
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  # - tailscale up --authkey=tskey-123456 --accept-dns=false
+

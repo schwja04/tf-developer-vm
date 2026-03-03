@@ -29,55 +29,59 @@ variable "resource_group_config" {
   }
 
   validation {
-    condition = length(var.resource_group_config.location) > 0
+    condition     = length(var.resource_group_config.location) > 0
     error_message = "The location must be a valid Azure region and a non-empty string"
+  }
+}
+
+variable "vm_auth_config" {
+  sensitive = true
+
+  type = object({
+    admin_username     = string
+    admin_ssh_key_path = string
+  })
+  description = "Authentication configuration for the virtual machine"
+  default = {
+    admin_username     = "serveradmin"
+    admin_ssh_key_path = "~/.ssh/id_rsa.pub"
+  }
+
+  validation {
+    condition     = length(var.vm_auth_config.admin_username) > 0
+    error_message = "The admin_username must be a non-empty string"
+  }
+
+  validation {
+    condition     = can(file(var.vm_auth_config.admin_ssh_key_path))
+    error_message = "The admin_ssh_key_path must be a valid file path"
   }
 }
 
 variable "vm_config" {
   type = object({
-    admin_username     = string
-    admin_ssh_key_path = string
-    size               = string
+    size = string
     os_image = object({
       publisher = string
       offer     = string
       sku       = string
       version   = string
     })
-    source_address_prefixes = set(string)
   })
   description = "Inputs for the virtual machine"
   default = {
-    admin_username     = "serveradmin"
-    admin_ssh_key_path = "~/.ssh/id_rsa.pub"
-    size               = "Standard_B2ats_v2"
+    size = "Standard_B2ats_v2"
     os_image = {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts-gen2"
       version   = null
     }
-    source_address_prefixes = []
-  }
-  validation {
-    condition     = length(var.vm_config.admin_username) > 0
-    error_message = "The admin_username must be a non-empty string"
-  }
-
-  validation {
-    condition     = can(file(var.vm_config.admin_ssh_key_path))
-    error_message = "The admin_ssh_key_path must be a valid file path"
   }
 
   validation {
     condition     = length(var.vm_config.size) > 0
     error_message = "The size must be a non-empty string"
-  }
-
-  validation {
-    condition     = alltrue([for ip in var.vm_config.source_address_prefixes : provider::assert::ip(ip) || provider::assert::cidr(ip)])
-    error_message = "The source_address_prefixes must be valid IP addresses"
   }
 }
 
